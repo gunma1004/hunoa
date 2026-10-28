@@ -5,7 +5,9 @@ import urllib.parse
 BASE_URL = "https://hunoa.netlify.app"
 PHONE = "0507-1280-3199"
 BRAND_NAME = "휴노아"
+YOUTUBE_ID = "0G6Voz_eh4w"
 
+# 3종 키워드 순환 (SEO 중복 방지)
 KEYWORD_ROTATION = itertools.cycle([
     "전신케어 마사지",
     "바디케어 마사지",
@@ -116,6 +118,7 @@ HTML_TEMPLATE = """<!doctype html>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="robots" content="index,follow,max-image-preview:large">
+  <meta name="Yeti" content="index,follow,max-image-preview:large">
   <title>{page_title}</title>
   <meta name="description" content="{meta_description}">
   <link rel="canonical" href="{canonical_url}">
@@ -127,94 +130,212 @@ HTML_TEMPLATE = """<!doctype html>
   <meta property="og:url" content="{canonical_url}">
   <meta property="og:image" content="https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=1200&h=630&q=80">
 
+  <script type="application/ld+json">
+  {{
+    "@context": "https://schema.org",
+    "@type": "LocalBusiness",
+    "name": "{page_title_h1} - {brand}",
+    "description": "{meta_description}",
+    "url": "{canonical_url}",
+    "telephone": "{phone}",
+    "priceRange": "60,000원 ~ 180,000원",
+    "aggregateRating": {{
+      "@type": "AggregateRating",
+      "ratingValue": "4.9",
+      "reviewCount": "148",
+      "bestRating": "5",
+      "worstRating": "1"
+    }}
+  }}
+  </script>
+
   <style>
-    :root {{ --bg: #121013; --card: #1c181d; --border: #2c252f; --text: #f3eff5; --muted: #9e93a2; --pink: #c76f8e; --pink-hover: #db7d9e; }}
+    :root {{
+      --bg-dark: #121013;
+      --card-bg: #1c181d;
+      --card-inner: #151218;
+      --card-border: #2c252f;
+      --text-main: #f3eff5;
+      --text-muted: #9e93a2;
+      --accent-pink: #c76f8e;
+      --accent-pink-hover: #db7d9e;
+      --accent-box-bg: #9e4b6c;
+      --accent-box-btn: #f7dbe3;
+      --accent-box-btn-text: #742542;
+      --star-color: #f59e0b;
+      --font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Pretendard", Roboto, "Noto Sans KR", sans-serif;
+    }}
     * {{ box-sizing: border-box; margin: 0; padding: 0; }}
-    body {{ background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Pretendard", Roboto, "Noto Sans KR", sans-serif; line-height: 1.6; padding-bottom: 70px; }}
+    body {{ background-color: var(--bg-dark); color: var(--text-main); font-family: var(--font-family); line-height: 1.6; padding-bottom: 70px; }}
     a {{ color: inherit; text-decoration: none; }}
     .wrap {{ max-width: 1140px; margin: 0 auto; padding: 0 16px; }}
-    header {{ background: #18141b; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; backdrop-filter: blur(8px); }}
-    .header-row {{ display: flex; align-items: center; justify-content: space-between; height: 60px; }}
-    .brand {{ font-size: 1.4rem; font-weight: 800; }}
-    .brand span {{ color: var(--pink); }}
-    .breadcrumbs {{ font-size: 0.85rem; color: var(--muted); margin: 20px 0 8px; }}
-    .breadcrumbs a:hover {{ text-decoration: underline; color: var(--pink); }}
-    h1 {{ font-size: 1.8rem; font-weight: 800; margin-bottom: 6px; }}
-    .sub-desc {{ color: var(--muted); font-size: 0.95rem; margin-bottom: 24px; }}
-    .tags {{ display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 28px; }}
-    .tag {{ background: var(--card); border: 1px solid var(--border); padding: 6px 14px; border-radius: 20px; font-size: 0.85rem; transition: 0.2s; }}
-    .tag:hover {{ border-color: var(--pink); color: #fff; background: var(--pink); }}
-    .grid {{ display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; margin-bottom: 40px; }}
-    .card {{ background: var(--card); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; display: flex; flex-direction: column; }}
-    .card img {{ width: 100%; height: 170px; object-fit: cover; }}
-    .card-body {{ padding: 14px; }}
-    .card-body strong {{ display: block; font-size: 1rem; margin-bottom: 4px; color: #fff; }}
-    .card-body small {{ color: var(--muted); font-size: 0.82rem; }}
-    .card-body b {{ display: block; margin-top: 8px; color: #5aa9e6; }}
-    .course-panel {{ background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 20px; margin-bottom: 30px; }}
-    .course-panel h3 {{ font-size: 1.1rem; margin-bottom: 12px; color: #fff; }}
-    .table {{ width: 100%; border-collapse: collapse; font-size: 0.9rem; }}
-    .table th, .table td {{ padding: 10px; border-bottom: 1px solid var(--border); text-align: left; }}
-    .table th {{ color: var(--muted); }}
-    .table td:last-child {{ text-align: right; font-weight: bold; }}
-    .fixed-call {{ position: fixed; bottom: 0; left: 0; right: 0; height: 54px; background: var(--pink); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1.05rem; z-index: 999; box-shadow: 0 -2px 10px rgba(0,0,0,0.5); }}
-    footer {{ border-top: 1px solid var(--border); padding: 30px 0; font-size: 0.85rem; color: var(--muted); text-align: center; }}
+    header.top {{ border-bottom: 1px solid var(--card-border); background: rgba(18, 16, 19, 0.96); position: sticky; top: 0; z-index: 100; backdrop-filter: blur(8px); }}
+    .header-row {{ display: flex; align-items: center; justify-content: space-between; height: 64px; }}
+    .brand {{ font-size: 1.35rem; font-weight: 800; letter-spacing: -0.5px; color: #fff; }}
+    .brand span {{ color: var(--accent-pink); }}
+    .nav {{ display: flex; gap: 14px; font-size: 0.9rem; font-weight: 600; }}
+    .page-head {{ padding: 24px 0 16px; }}
+    .breadcrumbs {{ font-size: 0.82rem; color: var(--text-muted); margin-bottom: 8px; }}
+    .breadcrumbs a:hover {{ text-decoration: underline; color: var(--accent-pink); }}
+    .title-line h1 {{ font-size: 1.75rem; font-weight: 800; margin-bottom: 4px; }}
+    .partner-badge {{ display: inline-block; background: #241f27; border: 1px solid var(--card-border); border-radius: 14px; padding: 3px 10px; font-size: 0.82rem; color: var(--text-muted); margin: 6px 0; }}
+    .partner-badge strong {{ color: #fff; }}
+    .star-summary-bar {{ display: inline-flex; align-items: center; gap: 8px; background: var(--card-inner); border: 1px solid var(--card-border); padding: 6px 14px; border-radius: 20px; font-size: 0.85rem; margin-top: 10px; }}
+    .star-summary-bar .stars {{ color: var(--star-color); font-weight: bold; }}
+    .tags {{ display: flex; flex-wrap: wrap; gap: 8px; margin: 16px 0 24px; }}
+    .tag {{ background: var(--card-inner); border: 1px solid var(--card-border); padding: 6px 14px; border-radius: 20px; font-size: 0.85rem; transition: 0.2s; }}
+    .tag:hover {{ border-color: var(--accent-pink); color: #fff; background: var(--accent-pink); }}
+    .detail-gallery {{ display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 28px; }}
+    .detail-gallery img {{ width: 100%; height: 380px; object-fit: cover; border-radius: 8px; border: 1px solid var(--card-border); }}
+    .detail-layout {{ display: grid; grid-template-columns: 1fr 310px; gap: 24px; align-items: start; }}
+    .panel {{ background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 12px; padding: 24px; margin-bottom: 20px; }}
+    .panel h2 {{ font-size: 1.25rem; font-weight: 700; margin-bottom: 16px; color: #fff; }}
+    .course-table {{ width: 100%; border-collapse: collapse; text-align: left; font-size: 0.92rem; }}
+    .course-table th, .course-table td {{ padding: 12px 14px; border-bottom: 1px solid var(--card-border); }}
+    .course-table th {{ color: var(--text-muted); font-weight: 600; background: var(--card-inner); }}
+    .course-table td:last-child {{ font-weight: 700; text-align: right; color: #fff; }}
+    .course-badge {{ font-size: 0.72rem; padding: 2px 6px; border-radius: 4px; margin-left: 6px; background: rgba(199, 111, 142, 0.2); color: var(--accent-pink); font-weight: bold; }}
+    .review-score-box {{ background: var(--card-inner); border: 1px solid var(--card-border); border-radius: 10px; padding: 16px; display: flex; align-items: center; justify-content: space-around; margin-bottom: 16px; text-align: center; }}
+    .score-big {{ font-size: 2rem; font-weight: 800; color: var(--star-color); }}
+    .review-item {{ background: var(--card-inner); border: 1px solid var(--card-border); border-radius: 8px; padding: 14px; margin-bottom: 10px; }}
+    .review-top {{ display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 6px; }}
+    .review-top strong {{ color: #fff; }}
+    .review-stars {{ color: var(--star-color); font-weight: bold; }}
+    .review-item p {{ font-size: 0.85rem; color: #d1c9d4; line-height: 1.45; }}
+    .map-frame, .video-frame {{ width: 100%; height: 280px; border: 0; border-radius: 8px; margin-top: 12px; }}
+    .profile-summary {{ background: var(--accent-box-bg); padding: 24px; border-radius: 14px; position: sticky; top: 84px; color: #fff; box-shadow: 0 4px 20px rgba(0,0,0,0.3); }}
+    .profile-summary small {{ font-size: 0.85rem; opacity: 0.9; }}
+    .profile-summary .price {{ font-size: 1.9rem; font-weight: 800; margin: 8px 0 14px; }}
+    .profile-call {{ display: block; width: 100%; background: var(--accent-box-btn); color: var(--accent-box-btn-text); text-align: center; padding: 12px 0; border-radius: 8px; font-size: 1rem; font-weight: 800; }}
+    .fixed-call {{ position: fixed; bottom: 0; left: 0; right: 0; height: 54px; background: var(--accent-pink); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 1.05rem; font-weight: 700; z-index: 999; box-shadow: 0 -2px 10px rgba(0,0,0,0.5); }}
+    footer {{ border-top: 1px solid var(--card-border); padding: 30px 0; text-align: center; color: var(--text-muted); font-size: 0.85rem; }}
+    @media (max-width: 900px) {{
+      .detail-gallery {{ grid-template-columns: repeat(2, 1fr); }}
+      .detail-gallery img {{ height: 260px; }}
+      .detail-layout {{ grid-template-columns: 1fr; }}
+      .profile-summary {{ position: static; margin-bottom: 24px; }}
+    }}
   </style>
 </head>
-<body>
-  <header>
+<body class="design-suwon-layout-04-dark-luxury">
+  <header class="top">
     <div class="wrap header-row">
       <a class="brand" href="/">{brand}<span>.</span></a>
-      <div><a href="tel:{phone}" style="color:var(--pink); font-weight:bold;">상담 {phone}</a></div>
+      <nav class="nav">
+        <a href="/">메인 홈</a>
+        <a href="tel:{phone}">전화 상담</a>
+      </nav>
     </div>
   </header>
 
-  <main class="wrap">
-    <div class="breadcrumbs">{breadcrumbs}</div>
-    <h1>{page_title_h1}</h1>
-    <p class="sub-desc">{location_title} 코스, 시간, 가격과 예약 준비를 확인하세요. 휴노아 제휴업체 관리 범위와 상담 정보를 안내합니다.</p>
-
-    {tag_section}
-
-    <section class="course-panel">
-      <h3>{location_title} 추천 코스 및 가격 안내</h3>
-      <table class="table">
-        <thead><tr><th>코스</th><th>시간</th><th>가격</th></tr></thead>
-        <tbody>
-          <tr><td>타이마사지</td><td>60분 / 90분</td><td>80,000원부터</td></tr>
-          <tr><td>아로마마사지</td><td>60분 / 90분</td><td>90,000원부터</td></tr>
-          <tr><td>힐링 밸런스케어</td><td>60분 / 90분</td><td>100,000원부터</td></tr>
-          <tr><td>스페셜 전신케어</td><td>90분 / 120분</td><td>130,000원부터</td></tr>
-        </tbody>
-      </table>
-    </section>
-
-    <h2 style="font-size:1.25rem; font-weight:700; margin-bottom:14px;">{location_title} 제휴업체 목록</h2>
-    <div class="grid">
-      <a class="card" href="tel:{phone}">
-        <img src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=400&h=300&q=80" alt="{location_title} 케어">
-        <div class="card-body">
-          <strong>{location_title} 은비살롱 케어</strong>
-          <small>{location_title} 전지역 30분 내 도착 · 전화 상담</small>
-          <b>힐링케어 100,000원 · 60분</b>
+  <main id="main">
+    <div class="wrap">
+      <div class="page-head">
+        <div class="breadcrumbs">{breadcrumbs}</div>
+        <div class="title-line">
+          <h1>{page_title_h1}</h1>
+          <div class="partner-badge">제휴업체 · <strong>오늘밤테라피</strong></div>
+          <p class="page-description">선입금 없는 100% 안심 후불제! {location_title} 오늘밤테라피 코스와 예약 정보를 확인하세요.</p>
         </div>
-      </a>
-      <a class="card" href="tel:{phone}">
-        <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&h=300&q=80" alt="{location_title} 마사지">
-        <div class="card-body">
-          <strong>{location_title} 프리미엄 테라피</strong>
-          <small>{location_title} 전화 연결시 코스 안내</small>
-          <b>스페셜 120,000원 · 90분</b>
+        <div class="star-summary-bar">
+          <span class="stars">★★★★★ 4.9</span>
+          <span>|</span>
+          <span>이용후기 <strong>148개</strong></span>
+          <span>|</span>
+          <span style="color: #6ee7b7;">재방문율 94.2%</span>
         </div>
-      </a>
-      <a class="card" href="tel:{phone}">
-        <img src="https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=400&h=300&q=80" alt="{location_title} 홈타이">
-        <div class="card-body">
-          <strong>{location_title} 정통 바디케어</strong>
-          <small>{location_title} 방문 예약 · 여성/남성 상담</small>
-          <b>아로마 110,000원 · 90분</b>
+      </div>
+
+      {tag_section}
+
+      <div class="detail-gallery">
+        <img src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=600&h=800&q=80" alt="{location_title} 안내 1">
+        <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=600&h=800&q=80" alt="{location_title} 안내 2">
+        <img src="https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=600&h=800&q=80" alt="{location_title} 안내 3">
+        <img src="https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=600&h=800&q=80" alt="{location_title} 안내 4">
+      </div>
+
+      <div class="detail-layout">
+        <div>
+          <section class="panel">
+            <h2>{location_title} 출장마사지 오늘밤테라피 소개</h2>
+            <p>{location_title} 일대에서 힐링마사지 일정을 알아보시는 고객을 위한 안내입니다. 예약금 일체 없는 100% 안심 후불제로 운영되며, 숙련된 전문 테라피스트가 30분 내 신속 방문하여 피로를 정성껏 케어해 드립니다.</p>
+          </section>
+
+          <!-- 오늘밤테라피 6가지 코스/가격표 -->
+          <section class="panel">
+            <h2>{location_title} 오늘밤테라피 코스·가격 안내</h2>
+            <table class="course-table">
+              <thead>
+                <tr><th>코스 프로그램</th><th>시간</th><th>가격</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>🔮 타이코스</td><td>60분</td><td>60,000원</td></tr>
+                <tr><td>🔮 타이코스</td><td>90분</td><td>80,000원</td></tr>
+                <tr><td>🔮 타이코스</td><td>120분</td><td>100,000원</td></tr>
+                <tr><td>🔮 전신아로마</td><td>60분</td><td>70,000원</td></tr>
+                <tr><td>🔮 전신아로마</td><td>90분</td><td>90,000원</td></tr>
+                <tr><td>🔮 전신아로마</td><td>120분</td><td>110,000원</td></tr>
+                <tr><td>🔮 VIP 감성힐링코스 <span class="course-badge">★추천</span></td><td>60분</td><td>90,000원</td></tr>
+                <tr><td>🔮 VIP 감성힐링코스 <span class="course-badge">★추천</span></td><td>90분</td><td>110,000원</td></tr>
+                <tr><td>🔮 VIP 감성힐링코스 <span class="course-badge">★추천</span></td><td>120분</td><td>130,000원</td></tr>
+                <tr><td>🔮 VIP 스페셜코스 <span class="course-badge">★추천</span></td><td>60분</td><td>100,000원</td></tr>
+                <tr><td>🔮 VIP 스페셜코스 <span class="course-badge">★추천</span></td><td>90분</td><td>120,000원</td></tr>
+                <tr><td>🔮 VIP 스페셜코스 <span class="course-badge">★추천</span></td><td>120분</td><td>140,000원</td></tr>
+                <tr><td>🔮 VIP 프리미엄 코스 <small style="display:block; color:var(--text-muted);">(타이 &amp; 아로마 &amp; 풋코스)</small></td><td>150분</td><td>160,000원</td></tr>
+                <tr><td>🔮 한국인스웨디시</td><td>60분</td><td>140,000원</td></tr>
+                <tr><td>🔮 한국인스웨디시</td><td>90분</td><td>180,000원</td></tr>
+              </tbody>
+            </table>
+          </section>
+
+          <!-- 별점 및 고객 리뷰 -->
+          <section class="panel">
+            <h2>{location_title} 고객 실시간 후기 및 평점</h2>
+            <div class="review-score-box">
+              <div>
+                <div class="score-big">4.9</div>
+                <div class="review-stars">★★★★★</div>
+                <small style="color:var(--text-muted);">148개 실제 후기 기준</small>
+              </div>
+              <div style="text-align: left; font-size: 0.85rem; line-height: 1.8;">
+                <div>친절도 만족도 <strong style="color:var(--star-color);">5.0</strong> / 5.0</div>
+                <div>신속 방문 만족도 <strong style="color:var(--star-color);">4.9</strong> / 5.0</div>
+                <div>관리 퀄리티 <strong style="color:var(--star-color);">4.9</strong> / 5.0</div>
+              </div>
+            </div>
+
+            <div class="review-item">
+              <div class="review-top">
+                <strong>김*우 고객님 <small style="color:var(--accent-pink);">(VIP 스페셜 90분)</small></strong>
+                <span class="review-stars">★★★★★ 5.0</span>
+              </div>
+              <p>{location_title} 인근인데 전화드리고 25분 만에 오셨네요. 선입금 전혀 없이 관리사분 오셔서 결제하니 너무 안심됩니다. 압도 적당하고 피로가 싹 풀렸습니다.</p>
+            </div>
+
+            <div class="review-item">
+              <div class="review-top">
+                <strong>이*진 고객님 <small style="color:var(--accent-pink);">(VIP 감성힐링 120분)</small></strong>
+                <span class="review-stars">★★★★★ 5.0</span>
+              </div>
+              <p>추천 적혀있어서 VIP 감성힐링으로 받았는데 정말 힐링 그 자체였습니다. 부드러운 관리 덕분에 꿀잠 잤습니다.</p>
+            </div>
+          </section>
+
+          <!-- 위치 및 영상 (지정 영상 삽입) -->
+          <section class="panel">
+            <h2>{location_title} 출장마사지 영상 안내</h2>
+            <iframe class="video-frame" loading="lazy" src="https://www.youtube-nocookie.com/embed/{youtube_id}" title="오늘밤테라피 이용 안내 영상" allowfullscreen></iframe>
+          </section>
         </div>
-      </a>
+
+        <aside class="profile-summary">
+          <small>{location_title} · 오늘밤테라피</small>
+          <div class="price">60,000원<small>부터</small></div>
+          <p>선입금 없는 100% 안심 후불제! 원하는 코스를 지금 바로 상담하세요.</p>
+          <a class="profile-call" href="tel:{phone}">상담 연결하기 ({phone})</a>
+        </aside>
+      </div>
     </div>
   </main>
 
@@ -224,7 +345,7 @@ HTML_TEMPLATE = """<!doctype html>
     </div>
   </footer>
 
-  <a class="fixed-call" href="tel:{phone}">전화 상담 ({phone})</a>
+  <a class="fixed-call" href="tel:{phone}">오늘밤테라피 전화 상담 ({phone})</a>
 </body>
 </html>
 """
@@ -236,24 +357,25 @@ def make_page(path, html_content):
 
 urls = [f"{BASE_URL}/"]
 
+print("페이지 생성을 시작합니다...")
+
 for reg_key, reg_val in REGION_DATA.items():
     reg_name = reg_val['name']
     
-    # 1. 시/도 페이지 생성 (/region/seoul/)
+    # 1. 시/도 페이지 생성
     current_kw = next(KEYWORD_ROTATION)
     reg_dir = os.path.join("region", reg_key)
     reg_url = f"{BASE_URL}/region/{reg_key}/"
     urls.append(reg_url)
     
     p_title = f"{reg_name} 출장 {current_kw} | {BRAND_NAME}"
-    m_desc = f"{reg_name} 출장 {current_kw} 코스, 시간, 가격과 예약 준비를 확인하세요. {BRAND_NAME} 제휴업체 힐링마사지 관리 범위와 상담 정보({PHONE})를 함께 안내합니다."
+    m_desc = f"{reg_name} 출장 {current_kw} 코스, 시간, 가격과 예약 준비를 확인하세요. {BRAND_NAME} 제휴업체 오늘밤테라피 관리 범위와 상담 정보({PHONE})를 함께 안내합니다."
     
-    # 구 태그 링크 생성
     dist_tags = "".join([f'<a class="tag" href="/region/{reg_key}/{d_key}/">{d_val["name"]}</a>' for d_key, d_val in reg_val['districts'].items()])
     tag_html = f'<div class="tags">{dist_tags}</div>'
     
     make_page(reg_dir, HTML_TEMPLATE.format(
-        brand=BRAND_NAME, phone=PHONE, 
+        brand=BRAND_NAME, phone=PHONE, youtube_id=YOUTUBE_ID,
         page_title=p_title,
         page_title_h1=f"{reg_name} 출장 {current_kw}",
         meta_description=m_desc,
@@ -263,7 +385,7 @@ for reg_key, reg_val in REGION_DATA.items():
         tag_section=tag_html
     ))
     
-    # 2. 구/군 페이지 생성 (/region/seoul/gangnam/)
+    # 2. 구/군 페이지 생성
     for dist_key, dist_val in reg_val['districts'].items():
         dist_name = dist_val['name']
         current_kw = next(KEYWORD_ROTATION)
@@ -273,14 +395,13 @@ for reg_key, reg_val in REGION_DATA.items():
         
         full_dist_title = f"{reg_name} {dist_name}"
         p_title = f"{full_dist_title} 출장 {current_kw} | {BRAND_NAME}"
-        m_desc = f"{full_dist_title} 출장 {current_kw} 코스, 시간, 가격과 예약 준비를 확인하세요. {BRAND_NAME} 제휴업체 힐링마사지 관리 범위와 상담 정보({PHONE})를 함께 안내합니다."
+        m_desc = f"{full_dist_title} 출장 {current_kw} 코스, 시간, 가격과 예약 준비를 확인하세요. {BRAND_NAME} 제휴업체 오늘밤테라피 관리 범위와 상담 정보({PHONE})를 함께 안내합니다."
         
-        # 동 태그 링크 생성 (동 이름 그대로 링크 URL 구성)
         dong_tags = "".join([f'<a class="tag" href="/region/{reg_key}/{dist_key}/{urllib.parse.quote(d)}/">{d}</a>' for d in dist_val['dongs']])
         tag_html = f'<div class="tags">{dong_tags}</div>'
         
         make_page(dist_dir, HTML_TEMPLATE.format(
-            brand=BRAND_NAME, phone=PHONE,
+            brand=BRAND_NAME, phone=PHONE, youtube_id=YOUTUBE_ID,
             page_title=p_title,
             page_title_h1=f"{full_dist_title} 출장 {current_kw}",
             meta_description=m_desc,
@@ -290,10 +411,9 @@ for reg_key, reg_val in REGION_DATA.items():
             tag_section=tag_html
         ))
         
-        # 3. 동/읍/면 페이지 생성 (/region/seoul/gangnam/역삼1동/)
+        # 3. 동/읍/면 페이지 생성
         for dong in dist_val['dongs']:
             current_kw = next(KEYWORD_ROTATION)
-            # 폴더명에 실제 동 이름을 사용하여 직관적인 URL 생성
             dong_dir = os.path.join(dist_dir, dong)
             encoded_dong = urllib.parse.quote(dong)
             dong_url = f"{BASE_URL}/region/{reg_key}/{dist_key}/{encoded_dong}/"
@@ -301,10 +421,10 @@ for reg_key, reg_val in REGION_DATA.items():
             
             full_dong_title = f"{reg_name} {dist_name} {dong}"
             p_title = f"{full_dong_title} 출장 {current_kw} | {BRAND_NAME}"
-            m_desc = f"{full_dong_title} 출장 {current_kw} 코스, 시간, 가격과 예약 준비를 확인하세요. {BRAND_NAME} 제휴업체 힐링마사지 관리 범위와 상담 정보({PHONE})를 함께 안내합니다."
+            m_desc = f"{full_dong_title} 출장 {current_kw} 코스, 시간, 가격과 예약 준비를 확인하세요. {BRAND_NAME} 제휴업체 오늘밤테라피 관리 범위와 상담 정보({PHONE})를 함께 안내합니다."
             
             make_page(dong_dir, HTML_TEMPLATE.format(
-                brand=BRAND_NAME, phone=PHONE,
+                brand=BRAND_NAME, phone=PHONE, youtube_id=YOUTUBE_ID,
                 page_title=p_title,
                 page_title_h1=f"{full_dong_title} 출장 {current_kw}",
                 meta_description=m_desc,
@@ -327,4 +447,4 @@ with open("sitemap.xml", "w", encoding="utf-8") as f:
 with open("robots.txt", "w", encoding="utf-8") as f:
     f.write(f"User-agent: *\nAllow: /\n\nSitemap: {BASE_URL}/sitemap.xml\n")
 
-print(f"완료! 총 {len(urls)}개의 독립 URL 정적 페이지 및 sitemap.xml, robots.txt 생성이 끝났습니다.")
+print(f"완료! 총 {len(urls)}개 페이지 및 sitemap.xml, robots.txt 생성이 완료되었습니다.")
