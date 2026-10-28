@@ -1,11 +1,11 @@
 import os
 import itertools
+import urllib.parse
 
 BASE_URL = "https://hunoa.netlify.app"
 PHONE = "0507-1280-3199"
 BRAND_NAME = "휴노아"
 
-# 순환할 키워드 목록
 KEYWORD_ROTATION = itertools.cycle([
     "전신케어 마사지",
     "바디케어 마사지",
@@ -126,22 +126,6 @@ HTML_TEMPLATE = """<!doctype html>
   <meta property="og:description" content="{meta_description}">
   <meta property="og:url" content="{canonical_url}">
   <meta property="og:image" content="https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=1200&h=630&q=80">
-  
-  <script type="application/ld+json">
-  {{
-    "@context": "https://schema.org",
-    "@type": "Service",
-    "name": "{page_title}",
-    "description": "{meta_description}",
-    "url": "{canonical_url}",
-    "telephone": "{phone}",
-    "provider": {{
-      "@type": "LocalBusiness",
-      "name": "{brand}",
-      "telephone": "{phone}"
-    }}
-  }}
-  </script>
 
   <style>
     :root {{ --bg: #121013; --card: #1c181d; --border: #2c252f; --text: #f3eff5; --muted: #9e93a2; --pink: #c76f8e; --pink-hover: #db7d9e; }}
@@ -154,6 +138,7 @@ HTML_TEMPLATE = """<!doctype html>
     .brand {{ font-size: 1.4rem; font-weight: 800; }}
     .brand span {{ color: var(--pink); }}
     .breadcrumbs {{ font-size: 0.85rem; color: var(--muted); margin: 20px 0 8px; }}
+    .breadcrumbs a:hover {{ text-decoration: underline; color: var(--pink); }}
     h1 {{ font-size: 1.8rem; font-weight: 800; margin-bottom: 6px; }}
     .sub-desc {{ color: var(--muted); font-size: 0.95rem; margin-bottom: 24px; }}
     .tags {{ display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 28px; }}
@@ -254,7 +239,7 @@ urls = [f"{BASE_URL}/"]
 for reg_key, reg_val in REGION_DATA.items():
     reg_name = reg_val['name']
     
-    # 1. 시/도 페이지 생성
+    # 1. 시/도 페이지 생성 (/region/seoul/)
     current_kw = next(KEYWORD_ROTATION)
     reg_dir = os.path.join("region", reg_key)
     reg_url = f"{BASE_URL}/region/{reg_key}/"
@@ -263,6 +248,7 @@ for reg_key, reg_val in REGION_DATA.items():
     p_title = f"{reg_name} 출장 {current_kw} | {BRAND_NAME}"
     m_desc = f"{reg_name} 출장 {current_kw} 코스, 시간, 가격과 예약 준비를 확인하세요. {BRAND_NAME} 제휴업체 힐링마사지 관리 범위와 상담 정보({PHONE})를 함께 안내합니다."
     
+    # 구 태그 링크 생성
     dist_tags = "".join([f'<a class="tag" href="/region/{reg_key}/{d_key}/">{d_val["name"]}</a>' for d_key, d_val in reg_val['districts'].items()])
     tag_html = f'<div class="tags">{dist_tags}</div>'
     
@@ -277,7 +263,7 @@ for reg_key, reg_val in REGION_DATA.items():
         tag_section=tag_html
     ))
     
-    # 2. 구/군 페이지 생성
+    # 2. 구/군 페이지 생성 (/region/seoul/gangnam/)
     for dist_key, dist_val in reg_val['districts'].items():
         dist_name = dist_val['name']
         current_kw = next(KEYWORD_ROTATION)
@@ -289,7 +275,8 @@ for reg_key, reg_val in REGION_DATA.items():
         p_title = f"{full_dist_title} 출장 {current_kw} | {BRAND_NAME}"
         m_desc = f"{full_dist_title} 출장 {current_kw} 코스, 시간, 가격과 예약 준비를 확인하세요. {BRAND_NAME} 제휴업체 힐링마사지 관리 범위와 상담 정보({PHONE})를 함께 안내합니다."
         
-        dong_tags = "".join([f'<a class="tag" href="/region/{reg_key}/{dist_key}/{idx}/">{d}</a>' for idx, d in enumerate(dist_val['dongs'])])
+        # 동 태그 링크 생성 (동 이름 그대로 링크 URL 구성)
+        dong_tags = "".join([f'<a class="tag" href="/region/{reg_key}/{dist_key}/{urllib.parse.quote(d)}/">{d}</a>' for d in dist_val['dongs']])
         tag_html = f'<div class="tags">{dong_tags}</div>'
         
         make_page(dist_dir, HTML_TEMPLATE.format(
@@ -303,11 +290,13 @@ for reg_key, reg_val in REGION_DATA.items():
             tag_section=tag_html
         ))
         
-        # 3. 동/읍/면 페이지 생성
-        for idx, dong in enumerate(dist_val['dongs']):
+        # 3. 동/읍/면 페이지 생성 (/region/seoul/gangnam/역삼1동/)
+        for dong in dist_val['dongs']:
             current_kw = next(KEYWORD_ROTATION)
-            dong_dir = os.path.join(dist_dir, str(idx))
-            dong_url = f"{BASE_URL}/region/{reg_key}/{dist_key}/{idx}/"
+            # 폴더명에 실제 동 이름을 사용하여 직관적인 URL 생성
+            dong_dir = os.path.join(dist_dir, dong)
+            encoded_dong = urllib.parse.quote(dong)
+            dong_url = f"{BASE_URL}/region/{reg_key}/{dist_key}/{encoded_dong}/"
             urls.append(dong_url)
             
             full_dong_title = f"{reg_name} {dist_name} {dong}"
@@ -334,4 +323,8 @@ sitemap_xml.append('</urlset>')
 with open("sitemap.xml", "w", encoding="utf-8") as f:
     f.write("\n".join(sitemap_xml))
 
-print(f"완료! 총 {len(urls)}개의 페이지와 sitemap.xml 생성이 완료되었습니다.")
+# 5. robots.txt 생성
+with open("robots.txt", "w", encoding="utf-8") as f:
+    f.write(f"User-agent: *\nAllow: /\n\nSitemap: {BASE_URL}/sitemap.xml\n")
+
+print(f"완료! 총 {len(urls)}개의 독립 URL 정적 페이지 및 sitemap.xml, robots.txt 생성이 끝났습니다.")
