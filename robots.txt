@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+
+# 네이버 및 구글 검색로봇 대상 사이트맵 위치 지정
+Sitemap: https://hunoa.netlify.app/sitemap.xml
